@@ -10,21 +10,45 @@ public class DSLAnalyzer {
     public static String analyze(String inputCode) throws IOException {
         String result = null;
         if (isSingleMethod(inputCode)) {
-            result = inputCode + ": ROOT\n"
-                    + "Method(s) number: 1";
+            result = handleSingleMethod(inputCode);
         } else if (isNested(inputCode)) {
-            String rootMethodName = getRootMethodName(inputCode);
-            HashMap<String, String> nestedMethodNames = getNestedMethodNames(inputCode);
+            if (isMultiNested(inputCode)) {
 
-            result = rootMethodName + ": ROOT\n";
-            for (Map.Entry<String, String> callerCalleePair : nestedMethodNames.entrySet()) {
-                result += (">" + callerCalleePair.getValue() + ": " + "ROOT -> " + callerCalleePair.getKey() + "\n");
+            } else {
+                result = handleSingleLevelNestedCode(inputCode);
             }
-
-            Integer methodsNumber = nestedMethodNames.size() + 1;
-            result += "Method(s) number: " + methodsNumber.toString();
         }
         return result;
+    }
+
+    private static boolean isMultiNested(String inputCode) {
+        Boolean isNested = inputCode.contains("{");
+        Boolean hasMultiLevels = inputCode.indexOf("{") != inputCode.lastIndexOf("{");
+        return isNested && hasMultiLevels;
+    }
+
+    private static String handleSingleLevelNestedCode(String inputCode) throws IOException {
+        String rootMethodName = getRootMethodName(inputCode);
+
+        DSLNode rootNode = new DSLNode();
+        rootNode.setCallerName(rootMethodName);
+
+        HashMap<String, String> nestedMethodNames = getNestedMethodNames(inputCode);
+        for (Map.Entry<String, String> callerCalleePair : nestedMethodNames.entrySet()) {
+            DSLNode subNode = new DSLNode();
+            subNode.setCallerName(callerCalleePair.getKey());
+            subNode.setCalleeName(callerCalleePair.getValue());
+            rootNode.addSubNode(subNode);
+        }
+
+        return rootNode.toString();
+    }
+
+    private static String handleSingleMethod(String inputCode) {
+        DSLNode dslNote = new DSLNode();
+        dslNote.setCallerName(inputCode);
+
+        return dslNote.toString();
     }
 
     private static HashMap<String, String> getNestedMethodNames(String inputCode) throws IOException {
