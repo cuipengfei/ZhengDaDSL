@@ -14,7 +14,7 @@ public class DSLNode {
 
     @Override
     public String toString() {
-        String result = null;
+        String result;
         if (isRootNode()) {
             if (subNodes.size() == 0) {
                 result = calleeName + ": ROOT\n"
@@ -27,7 +27,13 @@ public class DSLNode {
                 result += "Method(s) number: " + methodsNumber.toString();
             }
         } else {
-            result = calleeName + ": " + (parentNode.callerName == null ? "ROOT" : parentNode.callerName) + " -> " + callerName + "\n";
+            result = new StringBuilder().append(calleeName)
+                    .append(": ")
+                    .append(parentNode.callerName == null ? "ROOT" : parentNode.callerName)
+                    .append(" -> ")
+                    .append(callerName)
+                    .append("\n").toString();
+
             result = appendSubOutputs(result);
         }
         return result;
@@ -83,11 +89,7 @@ public class DSLNode {
 
     public void addSubNode(DSLNode subNode) {
         subNodes.add(subNode);
-        subNode.setParentNode(this);
-    }
-
-    public void setParentNode(DSLNode parentNode) {
-        this.parentNode = parentNode;
+        subNode.parentNode = this;
     }
 
     public DSLNode getParentNode() {
