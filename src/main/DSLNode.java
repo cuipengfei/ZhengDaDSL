@@ -7,24 +7,70 @@ import java.util.Map;
 public class DSLNode {
     private String callerName;
     private String calleeName;
+
+    private DSLNode parentNode;
+
     private List<DSLNode> subNodes = new ArrayList<DSLNode>();
 
     @Override
     public String toString() {
         String result = null;
-        if (subNodes.size() == 0) {
-            result = callerName + ": ROOT\n"
-                    + "Method(s) number: 1";
-        } else {
-            result = callerName + ": ROOT\n";
-            for (DSLNode subNode : subNodes) {
-                result += (">" + subNode.calleeName + ": " + "ROOT -> " + subNode.callerName + "\n");
-            }
+        if (isRootNode()) {
+            if (subNodes.size() == 0) {
+                result = calleeName + ": ROOT\n"
+                        + "Method(s) number: 1";
+            } else {
+                result = calleeName + ": ROOT\n";
+                result = appendSubOutputs(result);
 
-            Integer methodsNumber = subNodes.size() + 1;
-            result += "Method(s) number: " + methodsNumber.toString();
+                Integer methodsNumber = getNodesCount();
+                result += "Method(s) number: " + methodsNumber.toString();
+            }
+        } else {
+            result = calleeName + ": " + (parentNode.callerName == null ? "ROOT" : parentNode.callerName) + " -> " + callerName + "\n";
+            result = appendSubOutputs(result);
         }
         return result;
+    }
+
+    private int getNodesCount() {
+        int subNodesCount = 0;
+        for (DSLNode subNode : subNodes) {
+            subNodesCount += subNode.getNodesCount();
+        }
+        return subNodesCount + 1;
+    }
+
+    private String appendSubOutputs(String result) {
+        String prefix = getPrefix();
+        for (DSLNode subNode : subNodes) {
+            result += (prefix + subNode.toString());
+        }
+        return result;
+    }
+
+    private String getPrefix() {
+        String prefix;
+        if (isRootNode()) {
+            prefix = ">";
+        } else {
+            prefix = new String(new char[getLevelCount()]).replace('\0', '>');
+        }
+        return prefix;
+    }
+
+    private int getLevelCount() {
+        int levelCount = 1;
+        DSLNode tmpParentNode = parentNode;
+        while (tmpParentNode != null) {
+            levelCount++;
+            tmpParentNode = tmpParentNode.parentNode;
+        }
+        return levelCount;
+    }
+
+    private boolean isRootNode() {
+        return parentNode == null;
     }
 
     public void setCallerName(String callerName) {
@@ -37,5 +83,10 @@ public class DSLNode {
 
     public void addSubNode(DSLNode subNode) {
         subNodes.add(subNode);
+        subNode.setParentNode(this);
+    }
+
+    public void setParentNode(DSLNode parentNode) {
+        this.parentNode = parentNode;
     }
 }

@@ -31,7 +31,7 @@ public class DSLAnalyzer {
         String rootMethodName = getRootMethodName(inputCode);
 
         DSLNode rootNode = new DSLNode();
-        rootNode.setCallerName(rootMethodName);
+        rootNode.setCalleeName(rootMethodName);
 
         HashMap<String, String> nestedMethodNames = getNestedMethodNames(inputCode);
         for (Map.Entry<String, String> callerCalleePair : nestedMethodNames.entrySet()) {
@@ -46,7 +46,7 @@ public class DSLAnalyzer {
 
     private static String handleSingleMethod(String inputCode) {
         DSLNode dslNote = new DSLNode();
-        dslNote.setCallerName(inputCode);
+        dslNote.setCalleeName(inputCode);
 
         return dslNote.toString();
     }
