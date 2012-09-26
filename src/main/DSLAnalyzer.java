@@ -13,12 +13,48 @@ public class DSLAnalyzer {
             result = handleSingleMethod(inputCode);
         } else if (isNested(inputCode)) {
             if (isMultiNested(inputCode)) {
-
+                result = handleMultiLevelNestedCode(inputCode);
             } else {
                 result = handleSingleLevelNestedCode(inputCode);
             }
         }
         return result;
+    }
+
+    private static String handleMultiLevelNestedCode(String inputCode) throws IOException {
+        String rootMethodName = getRootMethodName(inputCode);
+
+        DSLNode currentNode = new DSLNode();
+        currentNode.setCalleeName(rootMethodName);
+
+        StringReader stringReader = new StringReader(inputCode);
+        BufferedReader bufferedReader = new BufferedReader(stringReader);
+        String line;
+        while ((line = bufferedReader.readLine()) != null) {
+            if (line.contains("}") && currentNode.getParentNode() != null) {
+                currentNode = currentNode.getParentNode();
+            }
+            if (isMethodCall(line)) {
+                if (line.contains("{")) {
+                    DSLNode node = new DSLNode();
+                    Map.Entry<String, String> callerCalleePair = getMethodName(line);
+                    node.setCallerName(callerCalleePair.getKey());
+                    node.setCalleeName(callerCalleePair.getValue());
+
+                    currentNode.addSubNode(node);
+                    currentNode = node;
+                } else {
+                    DSLNode node = new DSLNode();
+                    Map.Entry<String, String> callerCalleePair = getMethodName(line);
+                    node.setCallerName(callerCalleePair.getKey());
+                    node.setCalleeName(callerCalleePair.getValue());
+
+                    currentNode.addSubNode(node);
+                }
+            }
+        }
+
+        return currentNode.toString();
     }
 
     private static boolean isMultiNested(String inputCode) {
@@ -70,7 +106,7 @@ public class DSLAnalyzer {
         final String caller = parts[0];
 
         String secondPart = parts[1];
-        final String callee = secondPart.replace("(", "").replace(")", "").replace(";", "");
+        final String callee = secondPart.replace("(", "").replace(")", "").replace(";", "").replace("{", "");
 
         return new Map.Entry<String, String>() {
             @Override
@@ -91,7 +127,7 @@ public class DSLAnalyzer {
     }
 
     private static boolean isMethodCall(String line) {
-        return line.contains(".") && line.contains(";");
+        return line.contains(".") && line.contains("(") && line.contains(")");
     }
 
     private static String getRootMethodName(String inputCode) throws IOException {

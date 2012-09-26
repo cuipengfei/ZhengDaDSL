@@ -89,4 +89,8 @@ public class DSLNode {
     public void setParentNode(DSLNode parentNode) {
         this.parentNode = parentNode;
     }
+
+    public DSLNode getParentNode() {
+        return parentNode;
+    }
 }
